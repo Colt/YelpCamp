@@ -26,28 +26,31 @@ function wrapAsync(fn){
     }
 }
 
-
+// Home
 app.get('/', (req, res) => {
     res.render('home')
 });
 
+// Index 
 app.get('/campgrounds', wrapAsync(async (req, res, next) => {
     const campgrounds = await Campground.find({});
     res.render('campgrounds/index', { campgrounds })
 }));
 
-
+// Get form
 app.get('/campgrounds/new', (req, res) => {
     res.render('campgrounds/new');
 })
 
-
+// Create in crud
 app.post('/campgrounds', wrapAsync(async (req, res, next) => {
     const campground = new Campground(req.body.campground);
     await campground.save();
     res.redirect(`/campgrounds/${campground._id}`)
 }))
 
+
+// Read or Show in crud
 // I could have wrapped this inside wrapAsync. But i used try catch here instead.
 app.get('/campgrounds/:id', async (req, res,next) => {
     try {
@@ -59,18 +62,21 @@ app.get('/campgrounds/:id', async (req, res,next) => {
 
 });
 
+// Get edit form
 app.get('/campgrounds/:id/edit', wrapAsync(async (req, res , next) => {
     const campground = await Campground.findById(req.params.id)
     res.render('campgrounds/edit', { campground });
 }))
 
+
+// Edit in crud
 app.put('/campgrounds/:id', wrapAsync(async (req, res ,next) => {
     const { id } = req.params;
     const campground = await Campground.findByIdAndUpdate(id, { ...req.body.campground });
     res.redirect(`/campgrounds/${campground._id}`)
 }));
 
-
+// Delete in crud
 app.delete('/campgrounds/:id', wrapAsync(async (req, res) => {
     const { id } = req.params;
     await Campground.findByIdAndDelete(id);
@@ -89,7 +95,7 @@ app.use((err,req,res,next) => {
     res.status(500).send("Sth went wrong")
 })
 
-
+// Server Listens
 app.listen(3000, () => {
     console.log('Serving on port 3000')
 })
