@@ -8,7 +8,7 @@ const connectDB = require('./db')
 const port = process.env.PORT || 3000
 const wrapAsync = require('./utils/wrapAsync')
 const AppError = require('./utils/AppError')
-const {campgroundJoiSchema} = require('./joiSchemas/campgroundSchema')
+const campgroundJoiSchema = require('./joiSchemas/campgroundSchema')
 
 
 // server settings

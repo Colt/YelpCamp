@@ -10,4 +10,4 @@ const campgroundJoiSchema = Joi.object({
     }).required()
 })
 
-module.exports.campgroundJoiSchema = campgroundJoiSchema
+module.exports = campgroundJoiSchema
