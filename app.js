@@ -8,7 +8,7 @@ const Campground = require('./models/campground');
 
 const connectDB = async () => {
     try {
-        await mongoose.connect('mongodb://localhost:27017/relationshipDemo',{
+        await mongoose.connect('mongodb://localhost:27017/yelp-camp',{
             useUnifiedTopology : true,
             useNewUrlParser : true,
         })
