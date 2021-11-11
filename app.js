@@ -84,19 +84,19 @@ app.delete('/campgrounds/:id', wrapAsync(async (req, res) => {
 
 // 404 route
 app.all('*',(req,res,next) => {
-    next(new AppError("🙊 404",404))
+    next(new AppError("🙊 Page not found!!",404))
 })
 
 //This will catch every error that comes into this point and will send generic error message
 app.use((err,req,res,next) => {
-    console.error(`this is \n ${err}\n`)
+    console.error(`\n\t${err.stack}`)
     const {status =500, message="Something went wrong!"} = err;
     if (err instanceof AppError) {
-        res.status(status).send(message)
+        res.status(status).render('campgrounds/error',{message,status})
         return
     }
     //Below line handles internal errors
-    res.status(500).send("Something Went Wrong!!")
+    res.status(500).render('campgrounds/unexpected_error')
 })
 
 // Server Listens
