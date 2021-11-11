@@ -40,6 +40,7 @@ app.get('/campgrounds/new', (req, res) => {
 
 // Create in crud
 app.post('/campgrounds', wrapAsync(async (req, res, next) => {
+    if (!req.body.campground) throw new AppError("Invalid Campground Data!",400)
     const campground = new Campground(req.body.campground);
     await campground.save();
     res.redirect(`/campgrounds/${campground._id}`)
@@ -82,14 +83,20 @@ app.delete('/campgrounds/:id', wrapAsync(async (req, res) => {
 
 
 // 404 route
-app.use((req,res) => {
-    res.status(404).send("🙊 404")
+app.all('*',(req,res,next) => {
+    next(new AppError("🙊 404",404))
 })
 
 //This will catch every error that comes into this point and will send generic error message
 app.use((err,req,res,next) => {
     console.error(`this is \n ${err}\n`)
-    res.status(500).send("Sth went wrong")
+    const {status =500, message="Something went wrong!"} = err;
+    if (err instanceof AppError) {
+        res.status(status).send(message)
+        return
+    }
+    //Below line handles internal errors
+    res.status(500).send("Something Went Wrong!!")
 })
 
 // Server Listens
