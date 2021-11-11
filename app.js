@@ -3,26 +3,21 @@ const path = require('path');
 const mongoose = require('mongoose');
 const ejsMate = require('ejs-mate');
 const methodOverride = require('method-override');
-const Campground = require('./models/campground');
+const Campground = require('./db/models/campground');
 const app = express();
-const database = "yelp-camp"
+const connectDB = require('./db')
 
-//connecting to DB
-mongoose
-    .connect(`mongodb://127.0.0.1:27017/${database}`, { useNewUrlParser: true })
-    .then(console.log(`Mongoose connected to "${database}"!`))
-    .catch(e => {
-        console.error('Connection error', e.message)
-    })
-
-
+// server settings
 app.engine('ejs', ejsMate)
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'))
 
+// middleware
 app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride('_method'));
 
+//connect to DB
+connectDB()
 
 //parent function : wrapAsync
 function wrapAsync(fn){
