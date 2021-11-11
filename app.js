@@ -8,6 +8,8 @@ const connectDB = require('./db')
 const port = process.env.PORT || 3000
 const wrapAsync = require('./utils/wrapAsync')
 const AppError = require('./utils/AppError')
+const Joi = require('joi')
+
 
 // server settings
 app.engine('ejs', ejsMate)
@@ -17,6 +19,28 @@ app.set('views', path.join(__dirname, 'views'))
 // middleware
 app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride('_method'));
+
+const validateCampground = (req,res,next) => {
+    const campgroundJoiSchema = Joi.object({
+        campground : Joi.object({
+            title : Joi.string().required().min(3).max(30),
+            location : Joi.string().required().min(3).max(100),
+            price : Joi.number().required().min(0).max(100000),
+            image : Joi.string().allow(null, ''),
+            description : Joi.string().allow(null, '')
+        }).required()
+    })
+    
+    const {error} = campgroundJoiSchema.validate(req.body)
+
+    if(error) {
+        const msg = error.details.map(i => i.message).join(',')
+        throw new AppError(msg,400)
+    } else{
+        next()
+    }
+}
+
 
 //connect to DB
 connectDB()
@@ -39,8 +63,7 @@ app.get('/campgrounds/new', (req, res) => {
 })
 
 // Create in crud
-app.post('/campgrounds', wrapAsync(async (req, res, next) => {
-    if (!req.body.campground) throw new AppError("Invalid Campground Data!",400)
+app.post('/campgrounds', validateCampground, wrapAsync(async (req, res, next) => {
     const campground = new Campground(req.body.campground);
     await campground.save();
     res.redirect(`/campgrounds/${campground._id}`)
@@ -68,7 +91,7 @@ app.get('/campgrounds/:id/edit', wrapAsync(async (req, res , next) => {
 
 
 // Edit in crud
-app.put('/campgrounds/:id', wrapAsync(async (req, res ,next) => {
+app.put('/campgrounds/:id', validateCampground, wrapAsync(async (req, res ,next) => {
     const { id } = req.params;
     const campground = await Campground.findByIdAndUpdate(id, { ...req.body.campground });
     res.redirect(`/campgrounds/${campground._id}`)
@@ -89,7 +112,7 @@ app.all('*',(req,res,next) => {
 
 //This will catch every error that comes into this point and will send generic error message
 app.use((err,req,res,next) => {
-    console.error(`\n\t${err.stack}`)
+    console.error(`\n\t🤦‍♂️${err.stack}`)
     const {status =500, message="Something went wrong!"} = err;
     if (err instanceof AppError) {
         res.status(status).render('campgrounds/error',{message,status})
