@@ -8,7 +8,7 @@ const connectDB = require('./db')
 const port = process.env.PORT || 3000
 const wrapAsync = require('./utils/wrapAsync')
 const AppError = require('./utils/AppError')
-const Joi = require('joi')
+const {campgroundJoiSchema} = require('./joiSchemas/campgroundSchema')
 
 
 // server settings
@@ -21,18 +21,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride('_method'));
 
 const validateCampground = (req,res,next) => {
-    const campgroundJoiSchema = Joi.object({
-        campground : Joi.object({
-            title : Joi.string().required().min(3).max(30),
-            location : Joi.string().required().min(3).max(100),
-            price : Joi.number().required().min(0).max(100000),
-            image : Joi.string().allow(null, ''),
-            description : Joi.string().allow(null, '')
-        }).required()
-    })
-    
     const {error} = campgroundJoiSchema.validate(req.body)
-
     if(error) {
         const msg = error.details.map(i => i.message).join(',')
         throw new AppError(msg,400)
