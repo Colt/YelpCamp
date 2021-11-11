@@ -1,11 +1,13 @@
 const express = require('express');
-const path = require('path');
-const mongoose = require('mongoose');
+const path = require('path');1
 const ejsMate = require('ejs-mate');
 const methodOverride = require('method-override');
 const Campground = require('./db/models/campground');
 const app = express();
 const connectDB = require('./db')
+const port = process.env.PORT || 3000
+const wrapAsync = require('./utils/wrapAsync')
+const AppError = require('./utils/AppError')
 
 // server settings
 app.engine('ejs', ejsMate)
@@ -19,12 +21,6 @@ app.use(methodOverride('_method'));
 //connect to DB
 connectDB()
 
-//parent function : wrapAsync
-function wrapAsync(fn){
-    return function(req,res,next){
-        fn(req,res,next).catch(err => next(err))
-    }
-}
 
 // Home
 app.get('/', (req, res) => {
@@ -55,6 +51,7 @@ app.post('/campgrounds', wrapAsync(async (req, res, next) => {
 app.get('/campgrounds/:id', async (req, res,next) => {
     try {
         const campground = await Campground.findById(req.params.id)
+        if (!campground) res.send("404")
         res.render('campgrounds/show', { campground });
     } catch (error) {
         next(error)
@@ -96,6 +93,6 @@ app.use((err,req,res,next) => {
 })
 
 // Server Listens
-app.listen(3000, () => {
+app.listen(port, () => {
     console.log('Serving on port 3000')
 })
