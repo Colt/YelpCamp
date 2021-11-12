@@ -8,6 +8,6 @@ const Schema = mongoose.Schema;
 const reviewSchema = new Schema({
     body : String,
     rating : Number,
-})
+},{ timestamps: true })
 
 module.exports = mongoose.model('Review',reviewSchema)
