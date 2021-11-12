@@ -3,12 +3,14 @@ const path = require('path');1
 const ejsMate = require('ejs-mate');
 const methodOverride = require('method-override');
 const Campground = require('./db/models/campground');
+const Review = require('./db/models/review');
 const app = express();
 const connectDB = require('./db')
 const port = process.env.PORT || 3000
 const wrapAsync = require('./utils/wrapAsync')
 const AppError = require('./utils/AppError')
 const campgroundJoiSchema = require('./joiSchemas/campgroundSchema')
+const reviewJoiSchema = require('./joiSchemas/reviewSchema')
 
 
 // server settings
@@ -22,6 +24,16 @@ app.use(methodOverride('_method'));
 
 const validateCampground = (req,res,next) => {
     const {error} = campgroundJoiSchema.validate(req.body)
+    if(error) {
+        const msg = error.details.map(i => i.message).join(',')
+        throw new AppError(msg,400)
+    } else{
+        next()
+    }
+}
+
+const validateReview = (req,res,next) => {
+    const {error} = reviewJoiSchema.validate(req.body)
     if(error) {
         const msg = error.details.map(i => i.message).join(',')
         throw new AppError(msg,400)
@@ -86,9 +98,11 @@ app.put('/campgrounds/:id', validateCampground, wrapAsync(async (req, res ,next)
 }));
 
 // post reviews
-app.post('/campgrounds/:id/review',(req,res,next) => {
-    res.send(req.body)
-})
+app.post('/campgrounds/:id/review',  validateReview, wrapAsync(async(req,res,next) => {
+    const review = new Review(req.body.review);
+    await review.save();
+    res.send('success')
+}))
 
 // Delete in crud
 app.delete('/campgrounds/:id', wrapAsync(async (req, res) => {
