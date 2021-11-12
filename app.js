@@ -101,7 +101,7 @@ app.put('/campgrounds/:id', validateCampground, wrapAsync(async (req, res ,next)
 app.post('/campgrounds/:id/review',  validateReview, wrapAsync(async(req,res,next) => {
     const review = new Review(req.body.review);
     await review.save();
-    res.send('success')
+    res.send(review)
 }))
 
 // Delete in crud
