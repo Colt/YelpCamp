@@ -108,13 +108,21 @@ app.post('/campgrounds/:id/review',  validateReview, wrapAsync(async(req,res,nex
     res.redirect(`/campgrounds/${campground._id}`);
 }))
 
+//delete reviews
+app.delete('/campgrounds/:id/reviews/:reviewId', wrapAsync(async (req, res) => {
+    const { id,reviewId } = req.params;
+    await Review.findByIdAndDelete(reviewId);
+    const campground = await Campground.findById(id);
+    campground.reviews.pull(reviewId)
+    res.redirect(`/campgrounds/${campground._id}`);
+}))
+
 // Delete in crud
 app.delete('/campgrounds/:id', wrapAsync(async (req, res) => {
     const { id } = req.params;
     await Campground.findByIdAndDelete(id);
     res.redirect('/campgrounds');
 }))
-
 
 // 404 route
 app.all('*',(req,res,next) => {
