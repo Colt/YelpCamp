@@ -30,7 +30,6 @@ const validateCampground = (req,res,next) => {
     }
 }
 
-
 //connect to DB
 connectDB()
 
@@ -85,6 +84,11 @@ app.put('/campgrounds/:id', validateCampground, wrapAsync(async (req, res ,next)
     const campground = await Campground.findByIdAndUpdate(id, { ...req.body.campground });
     res.redirect(`/campgrounds/${campground._id}`)
 }));
+
+// post reviews
+app.post('/campgrounds/:id/review',(req,res,next) => {
+    res.send(req.body)
+})
 
 // Delete in crud
 app.delete('/campgrounds/:id', wrapAsync(async (req, res) => {
