@@ -29,10 +29,10 @@
 <div class="row">
     <p class="text-center display-6">Add a Review</p>
     <div class="col-6 offset-3">
-        <form action="/campgrounds/<%=campground._id%>/review" method="POST">
+        <form action="/campgrounds/<%=campground._id%>/review" method="POST" class="needs-validation" novalidate>
             <div class="mb-3">
                 <label class="form-label" for="review">Add review</label>
-                <textarea class="form-control" type="text" id="review" name="review[body]"></textarea>
+                <textarea class="form-control" type="text" id="review" name="review[body]" required></textarea>
             </div>
             <div class="mb-3 mr-5">
                 <label class="form-label" for="rating">Rating</label>
