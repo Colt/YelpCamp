@@ -27,8 +27,24 @@
 </div>
 
 <div class="row">
-    <p class="text-center display-6">Add a Review</p>
     <div class="col-6 offset-3">
+        <div class="card mb-5 mt-3">
+        <h3 class="text-center">Reviews</h3>
+        <% for( let i of campground.reviews) { %>
+        <div class="card-body">
+            <h2 class="card-title h3">User</h2>
+            <p class="card-text">Review : <%= i.body %> </p>
+            <p class="card-text">Rating : <%= i.rating %> </p>
+        </div>
+        <% } %>
+    </div>
+    </div>
+</div>
+
+
+<div class="row">
+    <div class="col-6 offset-3">
+        <p class="h4">Add a Review</p>
         <form action="/campgrounds/<%=campground._id%>/review" method="POST" class="needs-validation" novalidate>
             <div class="mb-3">
                 <label class="form-label" for="review">Add review</label>

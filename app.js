@@ -74,7 +74,7 @@ app.post('/campgrounds', validateCampground, wrapAsync(async (req, res, next) =>
 // I could have wrapped this inside wrapAsync. But i used try catch here instead.
 app.get('/campgrounds/:id', async (req, res,next) => {
     try {
-        const campground = await Campground.findById(req.params.id)
+        const campground = await Campground.findById(req.params.id).populate('reviews')
         if (!campground) res.send("404")
         res.render('campgrounds/show', { campground });
     } catch (error) {
