@@ -32,11 +32,11 @@
         <form action="/campgrounds/<%=campground._id%>/review" method="POST">
             <div class="mb-3">
                 <label class="form-label" for="review">Add review</label>
-                <textarea class="form-control" type="text" id="review" name="review.body"></textarea>
+                <textarea class="form-control" type="text" id="review" name="review[body]"></textarea>
             </div>
             <div class="mb-3 mr-5">
                 <label class="form-label" for="rating">Rating</label>
-                <input class="form-range" type="range" min="1" max="5" id="rating" name="review.rating">
+                <input class="form-range" type="range" min="1" max="5" id="rating" name="review[rating]">
             </div>
 
             <div class="mb-3">
