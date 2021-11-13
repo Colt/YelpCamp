@@ -63,14 +63,16 @@ router.get('/:id/edit', wrapAsync(async (req, res , next) => {
 router.put('/:id', validateCampground, wrapAsync(async (req, res ,next) => {
     const { id } = req.params;
     const campground = await Campground.findByIdAndUpdate(id, { ...req.body.campground });
-    req.flash('success',`You have updated the campground : ${campground.title}`)
+    req.flash('success',`Updated ${campground.title} campground.`)
     res.redirect(`/campgrounds/${campground._id}`)
 }));
 
 // Delete in crud
 router.delete('/:id', wrapAsync(async (req, res) => {
     const { id } = req.params;
+    const campground = await Campground.findById(id)
     await Campground.findByIdAndDelete(id);
+    req.flash('deleted',`Deleted ${campground.title} campground.`)
     res.redirect('/campgrounds');
 }))
 
