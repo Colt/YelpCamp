@@ -4,6 +4,7 @@ const path = require('path');
 const ejsMate = require('ejs-mate');
 const methodOverride = require('method-override');
 const session = require('express-session')
+const flash = require('connect-flash')
 
 // local modules
 const campgroundRoutes = require('./routes/campgroundRoutes')
@@ -34,9 +35,17 @@ app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride('_method'));
 app.use(express.static(path.join(__dirname,'public')))
 app.use(session(sessionConfig))
+app.use(flash())
 
 //connect to DB
 connectDB()
+
+//flash middleware
+app.use((req,res,next) => {
+    res.locals.success = req.flash('success')
+    res.locals.error = req.flash('error')
+    next()
+})
 
 //campgroundRoutes
 app.use('/campgrounds',campgroundRoutes)
