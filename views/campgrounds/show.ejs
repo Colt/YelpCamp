@@ -28,7 +28,7 @@
     <!-- review add block -->
     <div class="col-3 offset-3">
         <p class="h4">Add a Review</p>
-        <form action="/campgrounds/<%=campground._id%>/review" method="POST" class="needs-validation" novalidate>
+        <form action="/campgrounds/<%=campground._id%>/reviews" method="POST" class="needs-validation" novalidate>
             <div class="mb-3">
                 <label class="form-label" for="review">Add review</label>
                 <textarea class="form-control" type="text" id="review" name="review[body]" required></textarea>

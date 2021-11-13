@@ -3,15 +3,15 @@ const path = require('path');1
 const ejsMate = require('ejs-mate');
 const methodOverride = require('method-override');
 
-const Review = require('./db/models/review');
+
 const app = express();
 const connectDB = require('./db')
 const port = process.env.PORT || 3000
 
 const AppError = require('./utils/AppError')
 
-const reviewJoiSchema = require('./joiSchemas/reviewSchema')
 const campgroundRoutes = require('./routes/campgroundRoutes')
+const reviewRoutes = require('./routes/reviewRoutes')
 
 
 // server settings
@@ -23,24 +23,14 @@ app.set('views', path.join(__dirname, 'views'))
 app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride('_method'));
 
-
-
-const validateReview = (req,res,next) => {
-    const {error} = reviewJoiSchema.validate(req.body)
-    if(error) {
-        const msg = error.details.map(i => i.message).join(',')
-        throw new AppError(msg,400)
-    } else{
-        next()
-    }
-}
-
 //connect to DB
 connectDB()
 
-
 //campgroundRoutes
 app.use('/campgrounds',campgroundRoutes)
+
+//reviewRoutes
+app.use('/campgrounds/:id/reviews',reviewRoutes)
 
 // Home
 app.get('/', (req, res) => {
