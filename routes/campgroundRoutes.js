@@ -42,7 +42,9 @@ router.get('/:id', async (req, res,next) => {
     try {
         const campground = await Campground.findById(req.params.id).populate('reviews')
         if (!campground) {
-            throw new AppError("🙊 Page not found!!",404)
+            // throw new AppError("🙊 Page not found!!",404)
+            req.flash('error','No Campground Found!!')
+            return res.redirect('/campgrounds')
         }
         res.render('campgrounds/show', { campground });
     } catch (error) {
