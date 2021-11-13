@@ -1,18 +1,28 @@
+// dependencies
 const express = require('express');
-const path = require('path');1
+const path = require('path');
 const ejsMate = require('ejs-mate');
 const methodOverride = require('method-override');
+const session = require('express-session')
 
-
-const app = express();
-const connectDB = require('./db')
-const port = process.env.PORT || 3000
-
-const AppError = require('./utils/AppError')
-
+// local modules
 const campgroundRoutes = require('./routes/campgroundRoutes')
 const reviewRoutes = require('./routes/reviewRoutes')
+const connectDB = require('./db')
+const AppError = require('./utils/AppError')
 
+const sessionConfig = {
+    secret : 'Thisshouldbeabettersecret',
+    resave : false,
+    saveUninitialized : true,
+    cookie: {
+        httpOnly: true,
+        expires: Date.now() + 1000 * 60 * 60 * 24 * 7,
+        maxAge: 1000 * 60 * 60 * 24 * 7
+    }
+}
+const port = process.env.PORT || 3000
+const app = express();
 
 // server settings
 app.engine('ejs', ejsMate)
@@ -23,7 +33,7 @@ app.set('views', path.join(__dirname, 'views'))
 app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride('_method'));
 app.use(express.static(path.join(__dirname,'public')))
-
+app.use(session(sessionConfig))
 
 //connect to DB
 connectDB()
