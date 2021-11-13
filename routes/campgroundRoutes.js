@@ -41,7 +41,9 @@ router.post('/', validateCampground, wrapAsync(async (req, res, next) => {
 router.get('/:id', async (req, res,next) => {
     try {
         const campground = await Campground.findById(req.params.id).populate('reviews')
-        if (!campground) res.send("404")
+        if (!campground) {
+            throw new AppError("🙊 Page not found!!",404)
+        }
         res.render('campgrounds/show', { campground });
     } catch (error) {
         next(error)
@@ -59,6 +61,7 @@ router.get('/:id/edit', wrapAsync(async (req, res , next) => {
 router.put('/:id', validateCampground, wrapAsync(async (req, res ,next) => {
     const { id } = req.params;
     const campground = await Campground.findByIdAndUpdate(id, { ...req.body.campground });
+    req.flash('success',`You have updated the campground : ${campground.title}`)
     res.redirect(`/campgrounds/${campground._id}`)
 }));
 
