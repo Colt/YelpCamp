@@ -21,7 +21,7 @@ const reviewRoutes = require('./routes/reviews');
 
 const MongoDBStore = require("connect-mongo")(session);
 
-const dbUrl = process.env.DB_URL || 'mongodb://localhost:27017/yelp-camp';
+const dbUrl = process.env.DB_URL || 'mongodb://localhost:27017/naija-camp';
 
 mongoose.connect(dbUrl, {
     useNewUrlParser: true,
@@ -115,7 +115,7 @@ app.use(
                 "'self'",
                 "blob:",
                 "data:",
-                "https://res.cloudinary.com/douqbebwk/", //SHOULD MATCH YOUR CLOUDINARY ACCOUNT! 
+                "https://res.cloudinary.com/dh3o8ljce/", //SHOULD MATCH YOUR CLOUDINARY ACCOUNT! 
                 "https://images.unsplash.com",
             ],
             fontSrc: ["'self'", ...fontSrcUrls],
@@ -159,7 +159,7 @@ app.use((err, req, res, next) => {
     res.status(statusCode).render('error', { err })
 })
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 2400;
 app.listen(port, () => {
     console.log(`Serving on port ${port}`)
 })
