@@ -1,6 +1,6 @@
-if (process.env.NODE_ENV !== "production") {
-    require('dotenv').config();
-}
+// if (process.env.NODE_ENV !== "production") {
+//     require('dotenv').config();
+// }
 
 const express = require('express');
 const path = require('path');
@@ -41,6 +41,9 @@ const app = express();
 app.engine('ejs', ejsMate)
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'))
+app.use((req, res, next) => {
+    res.setHeader('Content-Type', '');
+})
 
 app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride('_method'));
@@ -132,7 +135,6 @@ passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
 
 app.use((req, res, next) => {
-    res.setHeader('Content-Type', '');
     res.locals.currentUser = req.user;
     res.locals.success = req.flash('success');
     res.locals.error = req.flash('error');
