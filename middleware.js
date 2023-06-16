@@ -1,7 +1,7 @@
 const { sequelize } = require('./database/database');
 const db = require("./database/db.js");
 const {joiCampSchema, joiReviewSchema} = require("./schemas")
-const ExpressError = require('./util/ExpressError');
+const ExpressError = require('./utils/ExpressError');
 const { Campground, Review, User } = require('./models/models');
 
 module.exports.isLoggedIn = (req,res,next) => { 
