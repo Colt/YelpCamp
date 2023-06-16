@@ -4,37 +4,42 @@ if (process.env.NODE_ENV !== "production") {
 
 const express = require('express');
 const path = require('path');
-const mongoose = require('mongoose');
+const { sequelize } = require('./database/database');
 const ejsMate = require('ejs-mate');
 const session = require('express-session');
 const flash = require('connect-flash');
 const ExpressError = require('./utils/ExpressError');
 const methodOverride = require('method-override');
 const passport = require('passport');
-const LocalStrategy = require('passport-local');
-const User = require('./models/user');
+const LocalStrategy = require('passport-local').Strategy;
+require('./passportConfig')(passport);
+const User = require('./models/models');
 const helmet = require('helmet');
-const mongoSanitize = require('express-mongo-sanitize');
 const userRoutes = require('./routes/users');
-const campgroundRoutes = require('./routes/campgrounds');
+const campRoutes = require('./routes/campgrounds');
 const reviewRoutes = require('./routes/reviews');
+const bodyParser = require('body-parser');
+const dbUser = process.env.DBUSER;
+const dbPass = process.env.DBPASSWORD;
 
-const MongoDBStore = require("connect-mongo")(session);
+const { Session } = require('./models/models');
+const pgSession = require('connect-pg-simple')(session);
 
-const dbUrl = process.env.DB_URL || 'mongodb://localhost:27017/yelp-camp';
+const port = 8000;
 
-mongoose.connect(dbUrl, {
-    useNewUrlParser: true,
-    useCreateIndex: true,
-    useUnifiedTopology: true,
-    useFindAndModify: false
-});
+// Connect to PostgreSQL database
+(async () => {
+  try {
+    await sequelize.authenticate();
+    console.log('Database connection has been established successfully.');
 
-const db = mongoose.connection;
-db.on("error", console.error.bind(console, "connection error:"));
-db.once("open", () => {
-    console.log("Database connected");
-});
+    // Sync the Session model with the database to create the 'session' table
+    await Session.sync();
+    console.log('Session table synchronized successfully.');
+  } catch (error) {
+    console.error('Unable to connect to the database:', error);
+  }
+})();
 
 const app = express();
 
@@ -42,124 +47,114 @@ app.engine('ejs', ejsMate)
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'))
 
-app.use(express.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(methodOverride('_method'));
 app.use(express.static(path.join(__dirname, 'public')))
-app.use(mongoSanitize({
-    replaceWith: '_'
-}))
-const secret = process.env.SECRET || 'thisshouldbeabettersecret!';
 
-const store = new MongoDBStore({
-    url: dbUrl,
-    secret,
-    touchAfter: 24 * 60 * 60
-});
-
-store.on("error", function (e) {
-    console.log("SESSION STORE ERROR", e)
-})
 
 const sessionConfig = {
-    store,
-    name: 'session',
-    secret,
-    resave: false,
-    saveUninitialized: true,
-    cookie: {
-        httpOnly: true,
-        // secure: true,
-        expires: Date.now() + 1000 * 60 * 60 * 24 * 7,
-        maxAge: 1000 * 60 * 60 * 24 * 7
+  name: 'session',
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: true,
+  cookie: {
+    httpOnly: true,
+    expires: Date.now() + 1000 * 60 * 60 * 24 * 7,
+    maxAge: 1000 * 60 * 60 * 24 * 7
+  },
+  store: new pgSession({
+    conString: `postgres://${dbUser}:${dbPass}@dpg-cht4h80rddlc2m8o0rk0-a.oregon-postgres.render.com/yelpcamp?ssl=true`, // Replace with your PostgreSQL connection string
+    tableName: 'session',
+    ssl: {
+      rejectUnauthorized: false // Set this to false for SSL/TLS connection
     }
-}
+  }),
+  unset: "destroy" // Added this line to ensure proper session deletion
+};
 
 app.use(session(sessionConfig));
 app.use(flash());
 app.use(helmet());
 
-
 const scriptSrcUrls = [
-    "https://stackpath.bootstrapcdn.com",
-    "https://api.tiles.mapbox.com",
-    "https://api.mapbox.com",
-    "https://kit.fontawesome.com",
-    "https://cdnjs.cloudflare.com",
-    "https://cdn.jsdelivr.net",
+  "https://stackpath.bootstrapcdn.com/",
+  "https://api.tiles.mapbox.com/",
+  "https://api.mapbox.com/",
+  "https://kit.fontawesome.com/",
+  "https://cdnjs.cloudflare.com/",
+  "https://cdn.jsdelivr.net",
 ];
 const styleSrcUrls = [
-    "https://kit-free.fontawesome.com",
-    "https://stackpath.bootstrapcdn.com",
-    "https://api.mapbox.com",
-    "https://api.tiles.mapbox.com",
-    "https://fonts.googleapis.com",
-    "https://use.fontawesome.com",
+  "https://kit-free.fontawesome.com/",
+  "https://stackpath.bootstrapcdn.com/",
+  "https://api.mapbox.com/",
+  "https://api.tiles.mapbox.com/",
+  "https://fonts.googleapis.com/",
+  "https://use.fontawesome.com/",
+  "https://cdn.jsdelivr.net",
 ];
 const connectSrcUrls = [
-    "https://api.mapbox.com",
-    "https://*.tiles.mapbox.com",
-    "https://events.mapbox.com",
+  "https://api.mapbox.com/",
+  "https://a.tiles.mapbox.com/",
+  "https://b.tiles.mapbox.com/",
+  "https://events.mapbox.com/",
+  "https://cdn.jsdelivr.net",
 ];
 const fontSrcUrls = [];
 app.use(
-    helmet.contentSecurityPolicy({
-        directives: {
-            defaultSrc: [],
-            connectSrc: ["'self'", ...connectSrcUrls],
-            scriptSrc: ["'unsafe-inline'", "'self'", ...scriptSrcUrls],
-            styleSrc: ["'self'", "'unsafe-inline'", ...styleSrcUrls],
-            workerSrc: ["'self'", "blob:"],
-            childSrc: ["blob:"],
-            objectSrc: [],
-            imgSrc: [
-                "'self'",
-                "blob:",
-                "data:",
-                "https://res.cloudinary.com/douqbebwk/", //SHOULD MATCH YOUR CLOUDINARY ACCOUNT! 
-                "https://images.unsplash.com",
-            ],
-            fontSrc: ["'self'", ...fontSrcUrls],
-        },
-    })
-);
+  helmet.contentSecurityPolicy({
+      directives: {
+          defaultSrc: [],
+          connectSrc: ["'self'", ...connectSrcUrls],
+          scriptSrc: ["'unsafe-inline'", "'self'", ...scriptSrcUrls],
+          styleSrc: ["'self'", "'unsafe-inline'", ...styleSrcUrls],
+          workerSrc: ["'self'", "blob:"],
+          objectSrc: [],
+          imgSrc: [
+              "'self'",
+              "blob:",
+              "data:",
+              "https://res.cloudinary.com/djphsccrb/", //SHOULD MATCH YOUR CLOUDINARY ACCOUNT! 
+              "https://wallpaperaccess.com/full/181060.jpg",
+              "https://images.unsplash.com/"
+          ],
+          fontSrc: ["'self'", ...fontSrcUrls],
+          'script-src-attr': null
 
+      },
+  })
+);
 
 app.use(passport.initialize());
 app.use(passport.session());
-passport.use(new LocalStrategy(User.authenticate()));
-
-passport.serializeUser(User.serializeUser());
-passport.deserializeUser(User.deserializeUser());
 
 app.use((req, res, next) => {
-    res.locals.currentUser = req.user;
-    res.locals.success = req.flash('success');
-    res.locals.error = req.flash('error');
-    next();
-})
-
-
-app.use('/', userRoutes);
-app.use('/campgrounds', campgroundRoutes)
-app.use('/campgrounds/:id/reviews', reviewRoutes)
-
-
-app.get('/', (req, res) => {
-    res.render('home')
+  res.locals.currentUser = req.user;
+  res.locals.success = req.flash("success");
+  res.locals.error = req.flash("error");
+  next();
 });
 
 
-app.all('*', (req, res, next) => {
-    next(new ExpressError('Page Not Found', 404))
-})
+app.use('/', userRoutes);
+app.use('/campgrounds', campRoutes);
+app.use('/campgrounds/:id/reviews', reviewRoutes);
+
+app.get("/", (req, res) => {
+  res.render("home");
+});
+
+app.all("*", (req, res, next) => {
+  next(new ExpressError("Page Not Found", 404));
+});
 
 app.use((err, req, res, next) => {
-    const { statusCode = 500 } = err;
-    if (!err.message) err.message = 'Oh No, Something Went Wrong!'
-    res.status(statusCode).render('error', { err })
-})
+  const { statusCode = 500 } = err;
+  if (!err.message) err.message = "Something Went Wrong";
+  res.status(statusCode).render("error", { err });
+});
 
-const port = process.env.PORT || 3000;
 app.listen(port, () => {
-    console.log(`Serving on port ${port}`)
-})
+  console.log(`Listening on port ${port}`);
+});
