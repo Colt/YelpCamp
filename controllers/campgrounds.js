@@ -33,46 +33,6 @@ module.exports.createCampground = async (req, res, next) => {
     res.redirect(`/campgrounds/${campground._id}`)
 }
 
-module.exports.createCampground = async (req, res, next) => {
-  try {
-
-    const geoData = await geocoder.forwardGeocode({
-      query: req.body.campground.location,
-      limit: 1,
-    }).send();
-
-    const newCampground = {
-      title: req.body.campground.title,
-      location: req.body.campground.location,
-      price: req.body.campground.price,
-      description: req.body.campground.description,
-      geometry: geoData.body.features[0].geometry.coordinates,
-      images: req.files.map(f => ({ url: f.path, filename: f.filename })),
-      authorid: req.user.id,
-    };
-
-    const { rows: createdCampground } = await db.query(
-      "INSERT INTO campgrounds (title, location, price, description, geometry, images, authorid) " +
-      "VALUES ($1, $2, $3, $4, ST_GeographyFromText('POINT(' || $5 || ' ' || $6 || ')'), $7, $8) " +
-      "RETURNING *",
-      [
-        newCampground.title,
-        newCampground.location,
-        newCampground.price,
-        newCampground.description,
-        newCampground.geometry[0],
-        newCampground.geometry[1],
-        newCampground.images,
-        newCampground.authorid,
-      ]
-    );
-
-    req.flash("success", "Campground Created");
-    res.redirect(`/campgrounds/${createdCampground[0].id}`);
-  } catch (error) {
-    next(error);
-  }
-};
 
 
 module.exports.showCampground = async (req, res, next) => {
